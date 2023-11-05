@@ -26,16 +26,28 @@ async function run() {
     try {
         // Connect the client to the server	(optional starting in v4.7)
         await client.connect();
-
+        const usersCollection = client.db("bistroBossDb").collection('users')
         const menuCollection = client.db("bistroBossDb").collection('menu')
         const reviewCollection = client.db('bistroBossDb').collection('reviews')
         const cartCollection = client.db("bistroBossDb").collection('carts')
 
+        //user collection
+        app.post('/users', async (req, res) => {
+            const user = req.body;
+            const query = {email : user.email}
+            const exitingUser = await usersCollection.findOne(query)
+            if(exitingUser){
+                return { message : "user already exit"}
+            }
+            const result = await usersCollection.insertOne(user);
+            res.send(result)
+        })
+        //menu collection
         app.get('/menu', async (req, res) => {
             const result = await menuCollection.find().toArray();
             res.send(result);
         })
-
+        //review collection
         app.get('/reviews', async (req, res) => {
             const result = await reviewCollection.find().toArray()
             res.send(result)
