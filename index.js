@@ -1,6 +1,7 @@
 const express = require('express');
 const app = express();
 const cors = require('cors');
+const jwt = require('jsonwebtoken')
 const port = process.env.PORT || 5000;
 require('dotenv').config()
 
@@ -31,17 +32,47 @@ async function run() {
         const reviewCollection = client.db('bistroBossDb').collection('reviews')
         const cartCollection = client.db("bistroBossDb").collection('carts')
 
+        app.post('/jwt',(req,res)=>{
+            const user  = req.body;
+            const token = jwt.sign(user,process.env.ACCESS_TOKEN,{expiresIn:'1h'})
+            res.send({token})
+        })
         //user collection
+        app.delete('/users/:id', async (req, res) => {
+            const id = req.params.id
+            console.log(id);
+            const query = { _id: new ObjectId(id) }
+            const result = await usersCollection.deleteOne(query)
+            res.send(result)
+        })
+        app.get('/users', async (req, res) => {
+            const result = await usersCollection.find().toArray();
+            res.send(result)
+        })
         app.post('/users', async (req, res) => {
             const user = req.body;
-            const query = {email : user.email}
+            const query = { email: user.email }
             const exitingUser = await usersCollection.findOne(query)
-            if(exitingUser){
-                return { message : "user already exit"}
+            if (exitingUser) {
+                return { message: "user already exit" }
             }
             const result = await usersCollection.insertOne(user);
             res.send(result)
         })
+
+        app.patch('/users/admin/:id', async (req, res) => {
+            const id = req.params.id;
+            const filter = { _id: new ObjectId(id) }
+            const updateDoc = {
+                $set: {
+                    role: 'admin'
+                },
+            }
+            const result = await usersCollection.updateOne(filter,updateDoc)
+            res.send(result)
+        })
+
+
         //menu collection
         app.get('/menu', async (req, res) => {
             const result = await menuCollection.find().toArray();
