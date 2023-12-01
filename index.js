@@ -82,7 +82,7 @@ async function run() {
             const query = { email: user.email }
             const exitingUser = await usersCollection.findOne(query)
             if (exitingUser) {
-            
+
                 return { message: "user already exit" }
             }
             const result = await usersCollection.insertOne(user);
@@ -118,6 +118,19 @@ async function run() {
             const result = await menuCollection.find().toArray();
             res.send(result);
         })
+
+        app.post('/menu', verifyJWT, verifyAdmin, async (req, res) => {
+            const newItem = req.body;
+            const result = await menuCollection.insertOne(newItem);
+            res.send(result)
+        })
+        app.delete('/menu/:id', verifyJWT, verifyAdmin, async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) }
+            console.log(id,query)
+            const result = await menuCollection.deleteOne(query)
+            res.send(result)
+        })
         //review collection
         app.get('/reviews', async (req, res) => {
             const result = await reviewCollection.find().toArray()
@@ -132,7 +145,7 @@ async function run() {
             }
 
             const decodedEmail = req.decoded.email;
-           
+
             if (email != decodedEmail) {
                 return res.status(401).send({ error: true, message: "unauthorized access" })
             }
